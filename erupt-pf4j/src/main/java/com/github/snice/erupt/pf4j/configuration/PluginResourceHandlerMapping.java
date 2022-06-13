@@ -1,5 +1,6 @@
 package com.github.snice.erupt.pf4j.configuration;
 
+import com.github.snice.erupt.pf4j.config.EruptPf4jProperties;
 import org.pf4j.PluginManager;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.ClassPathResource;
@@ -19,22 +20,22 @@ import java.util.stream.Stream;
 
 public class PluginResourceHandlerMapping extends SimpleUrlHandlerMapping {
 
-    private static final String DEFAULT_PATH = "/_plugins/static/";
-
+    private final EruptPf4jProperties pf4jProperties;
     private final javax.servlet.ServletContext servletContext;
 
     private final PluginManager pluginManager;
 
-    public PluginResourceHandlerMapping(ServletContext servletContext, PluginManager pluginManager) {
+    public PluginResourceHandlerMapping(ServletContext servletContext, PluginManager pluginManager, EruptPf4jProperties pf4jProperties) {
         this.servletContext = servletContext;
         this.pluginManager = pluginManager;
+        this.pf4jProperties = pf4jProperties;
         init();
     }
 
     private void init() {
         setOrder(Ordered.HIGHEST_PRECEDENCE);
         Map<String, ResourceHttpRequestHandler> urlMap = new HashMap<>();
-        urlMap.put(DEFAULT_PATH + "/**", createResourceRequestHandler("/static/"));
+        urlMap.put(pf4jProperties.getStaticPathPattern(), createResourceRequestHandler("/static/"));
         setUrlMap(urlMap);
     }
 

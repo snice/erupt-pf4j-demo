@@ -46,7 +46,7 @@ public class Pf4jConfiguration {
     @Bean
     @DependsOn("pluginManager")
     public PluginResourceHandlerMapping pluginResourceHandlerMapping(ServletContext servletContext, SpringPluginManager pluginManager) {
-        return new PluginResourceHandlerMapping(servletContext, pluginManager);
+        return new PluginResourceHandlerMapping(servletContext, pluginManager, properties);
     }
 
 
