@@ -17,11 +17,7 @@ package org.pf4j.update;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.pf4j.PluginManager;
-import org.pf4j.PluginRuntimeException;
-import org.pf4j.PluginState;
-import org.pf4j.PluginWrapper;
-import org.pf4j.VersionManager;
+import org.pf4j.*;
 import org.pf4j.update.PluginInfo.PluginRelease;
 import org.pf4j.update.verifier.CompoundVerifier;
 import org.slf4j.Logger;
@@ -33,12 +29,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -179,7 +170,7 @@ public class UpdateManager {
     /**
      * Add one {@link DefaultUpdateRepository}.
      *
-     * @param id of repo
+     * @param id  of repo
      * @param url of repo
      */
     public void addRepository(String id, URL url) {
@@ -212,13 +203,13 @@ public class UpdateManager {
      * @param id of repository to remove
      */
     public void removeRepository(String id) {
-      for (UpdateRepository repo : getRepositories()) {
-        if (id.equals(repo.getId())) {
-          repositories.remove(repo);
-          break;
+        for (UpdateRepository repo : getRepositories()) {
+            if (id.equals(repo.getId())) {
+                repositories.remove(repo);
+                break;
+            }
         }
-      }
-      log.warn("Repository with id " + id + " not found, doing nothing");
+        log.warn("Repository with id " + id + " not found, doing nothing");
     }
 
     /**
@@ -237,17 +228,19 @@ public class UpdateManager {
     /**
      * Installs a plugin by id and version.
      *
-     * @param id the id of plugin to install
+     * @param id      the id of plugin to install
      * @param version the version of plugin to install, on SemVer format, or null for latest
      * @return true if installation successful and plugin started
-     * @exception PluginRuntimeException if plugin does not exist in repos or problems during
+     * @throws PluginRuntimeException if plugin does not exist in repos or problems during
      */
     public synchronized boolean installPlugin(String id, String version) {
         // Download to temporary location
         Path downloaded = downloadPlugin(id, version);
 
         Path pluginsRoot = pluginManager.getPluginsRoot();
-        Path file = pluginsRoot.resolve(downloaded.getFileName());
+//        Path file = pluginsRoot.resolve(downloaded.getFileName());
+        String fileType = "." + downloaded.getFileName().toString().split("\\.")[1];
+        Path file = pluginsRoot.resolve(id + "@" + version + fileType);
         try {
             Files.move(downloaded, file, REPLACE_EXISTING);
         } catch (IOException e) {
@@ -264,7 +257,7 @@ public class UpdateManager {
      * Downloads a plugin with given coordinates, runs all {@link FileVerifier}s
      * and returns a path to the downloaded file.
      *
-     * @param id of plugin
+     * @param id      of plugin
      * @param version of plugin or null to download latest
      * @return Path to file which will reside in a temporary folder in the system default temp area
      * @throws PluginRuntimeException if download failed
@@ -316,7 +309,7 @@ public class UpdateManager {
     /**
      * Resolves Release from id and version.
      *
-     * @param id of plugin
+     * @param id      of plugin
      * @param version of plugin or null to locate latest version
      * @return PluginRelease for downloading
      * @throws PluginRuntimeException if id or version does not exist
@@ -344,11 +337,11 @@ public class UpdateManager {
     /**
      * Updates a plugin id to given version or to latest version if {@code version == null}.
      *
-     * @param id the id of plugin to update
+     * @param id      the id of plugin to update
      * @param version the version to update to, on SemVer format, or null for latest
      * @return true if update successful
-     * @exception PluginRuntimeException in case the given version is not available, plugin id not already installed etc
-    */
+     * @throws PluginRuntimeException in case the given version is not available, plugin id not already installed etc
+     */
     public boolean updatePlugin(String id, String version) {
         if (pluginManager.getPlugin(id) == null) {
             throw new PluginRuntimeException("Plugin {} cannot be updated since it is not installed", id);

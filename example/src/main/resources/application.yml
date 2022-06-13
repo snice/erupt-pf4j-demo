@@ -5,7 +5,7 @@ erupt:
   # 是否开启csrf防御
   csrfInspect: true
   # 是否开启redis方式存储session，默认false，开启后需在配置文件中添加redis配置（同 spring boot）
-  redisSession: false
+  redisSession: true
   # 附件上传存储路径, 默认路径为：/opt/erupt-attachment
   uploadPath: /Users/itfenbao/Documents/erupt-upload
   # 是否保留上传文件原始名称
@@ -25,6 +25,10 @@ magic-api:
   show-url: false
 
 spring:
+  redis:
+    database: 0
+    timeout: 10000
+    host: 127.0.0.1
   datasource:
     url: jdbc:mysql://localhost:3306/erupt-example?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
     username: root
