@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Plugin-Class: com.itfenbao.plugin1.TestPlugin
+Plugin-Dependencies: 
+Plugin-Id: test-plugin
+Plugin-Provider: itfenbao
+Plugin-Version: 0.0.1
+

@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Created-By: Maven JAR Plugin 3.2.2
+Build-Jdk-Spec: 11
+Plugin-Class: com.itfenbao.plugin2.Plugin2Plugin
+Plugin-Dependencies: 
+Plugin-Id: test-plugin2
+Plugin-Provider: itfenbao
+Plugin-Version: 0.0.1
+

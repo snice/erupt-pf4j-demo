@@ -14,8 +14,9 @@
     <artifactId>erupt-ext</artifactId>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <module>example</module>
         <module>erupt-pf4j</module>
+        <module>example</module>
+        <module>plugins</module>
     </modules>
 
     <packaging>pom</packaging>
@@ -33,9 +34,14 @@
                 <version>1.18.24</version>
             </dependency>
             <dependency>
+                <groupId>org.pf4j</groupId>
+                <artifactId>pf4j</artifactId>
+                <version>3.6.0</version>
+            </dependency>
+            <dependency>
                 <groupId>com.github.snice</groupId>
                 <artifactId>spring-pf4j</artifactId>
-                <version>0.0.3</version>
+                <version>0.0.4</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

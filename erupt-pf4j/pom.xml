@@ -55,7 +55,7 @@
         <dependency>
             <groupId>com.github.snice</groupId>
             <artifactId>spring-pf4j</artifactId>
-            <version>0.0.3</version>
+            <version>0.0.4</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
