@@ -24,6 +24,7 @@
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencyManagement>
@@ -41,7 +42,7 @@
             <dependency>
                 <groupId>com.github.snice</groupId>
                 <artifactId>spring-pf4j</artifactId>
-                <version>0.0.4</version>
+                <version>0.1.2</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

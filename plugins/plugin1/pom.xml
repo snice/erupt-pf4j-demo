@@ -43,6 +43,10 @@
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>xyz.erupt</groupId>
+            <artifactId>erupt-jpa</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
