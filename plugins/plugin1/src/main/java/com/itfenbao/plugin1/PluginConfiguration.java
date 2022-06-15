@@ -5,7 +5,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.annotation.Resource;
 import javax.sql.DataSource;
@@ -23,21 +25,14 @@ public class PluginConfiguration {
 
     @Bean
     public LocalContainerEntityManagerFactoryBean plugin1EntityFactoryBean() {
-        return entityManagerFactoryBuilder
-                .dataSource(dataSource)
-                .persistenceUnit("plugin1Persistence")
-                .packages("com.itfenbao.plugin1.entity")
-                .build();
+        return entityManagerFactoryBuilder.dataSource(dataSource).persistenceUnit("plugin1Persistence").packages("com.itfenbao.plugin1.entity").build();
     }
 
-//    @Bean
-//    public JpaRepositoryFactoryBean teacherRepository() {
-//        return new JpaRepositoryFactoryBean<>(TeacherRepository.class);
-//    }
-//
-//    @Bean
-//    public PlatformTransactionManager transactionManager() {
-//        return new JpaTransactionManager();
-//    }
+    @Bean
+    public PlatformTransactionManager transactionManager() {
+        JpaTransactionManager transactionManager = new JpaTransactionManager();
+        transactionManager.setPersistenceUnitName("plugin1Persistence");
+        return transactionManager;
+    }
 
 }

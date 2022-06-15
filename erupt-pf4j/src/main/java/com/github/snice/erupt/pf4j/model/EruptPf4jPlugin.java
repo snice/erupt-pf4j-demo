@@ -1,5 +1,6 @@
 package com.github.snice.erupt.pf4j.model;
 
+import com.github.snice.erupt.pf4j.handler.EruptPluginHandler;
 import com.github.snice.erupt.pf4j.service.Pf4jPluginService;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,6 +16,7 @@ import xyz.erupt.annotation.sub_erupt.Link;
 import xyz.erupt.annotation.sub_erupt.Power;
 import xyz.erupt.annotation.sub_erupt.RowOperation;
 import xyz.erupt.annotation.sub_field.Edit;
+import xyz.erupt.annotation.sub_field.Readonly;
 import xyz.erupt.annotation.sub_field.View;
 import xyz.erupt.annotation.sub_field.sub_edit.BoolType;
 import xyz.erupt.annotation.sub_field.sub_edit.Search;
@@ -32,19 +34,30 @@ import java.util.List;
 import java.util.Map;
 
 @EruptI18n
-@Erupt(name = "插件列表", power = @Power(delete = false), dataProxy = EruptPf4jPlugin.class, drills = @Drill(title = "版本", icon = "fa" + " fa-list", link =
-@Link(linkErupt = EruptPf4jPluginVersion.class, joinColumn = "eruptPf4jPlugin.id")), rowOperation = {@RowOperation(icon = "fa fa-toggle-off", title = "启用",
-        ifExpr = "item.hasPlugin &&  item.status == '禁用'", ifExprBehavior = RowOperation.IfExprBehavior.HIDE, mode = RowOperation.Mode.SINGLE,
-        operationParam = "enable", operationHandler = EruptPf4jPlugin.class), @RowOperation(icon = "fa fa-toggle-on", title = "禁用", ifExpr = "item.hasPlugin "
-        + "&& item.status == '启用'", ifExprBehavior = RowOperation.IfExprBehavior.HIDE, mode = RowOperation.Mode.SINGLE, tip = "会停止插件运行", operationParam =
-        "disable", operationHandler = EruptPf4jPlugin.class),
+@Erupt(
+        name = "插件列表",
+        power = @Power(powerHandler = EruptPluginHandler.class), dataProxy = EruptPf4jPlugin.class,
+        drills = @Drill(title = "版本", icon =
+                "fa" + " fa-list", link = @Link(linkErupt = EruptPf4jPluginVersion.class, joinColumn = "eruptPf4jPlugin.id")),
+        rowOperation = {
+                @RowOperation(icon =
+                        "fa fa-toggle-off", title = "启用", ifExpr = "item.hasPlugin &&  item.status == '禁用'", ifExprBehavior =
+                        RowOperation.IfExprBehavior.HIDE, mode =
+                        RowOperation.Mode.SINGLE, operationParam = "enable", operationHandler = EruptPf4jPlugin.class),
+                @RowOperation(icon = "fa fa-toggle-on", title = "禁用",
+                        ifExpr = "item.hasPlugin " + "&& item.status == '启用'", ifExprBehavior = RowOperation.IfExprBehavior.HIDE, mode =
+                        RowOperation.Mode.SINGLE, tip =
+                        "会停止插件运行", operationParam = "disable", operationHandler = EruptPf4jPlugin.class),
 //        @RowOperation(icon = "fa fa-download",
 ////                        show = @ExprBool(exprHandler = ViaMenuValueCtrl.class, params = "pf4j_plugin_install"),
 //        mode = RowOperation.Mode.SINGLE, title = "安装", tip = "数据库相关", operationParam = "install", operationHandler = EruptPf4jPlugin.class),
-        @RowOperation(icon = "fa fa-remove", title = "卸载", ifExpr = "item.hasPlugin", ifExprBehavior = RowOperation.IfExprBehavior.HIDE, mode =
-                RowOperation.Mode.SINGLE, tip = "删除数据并删除插件及版本", operationParam = "uninstall", operationHandler = EruptPf4jPlugin.class), @RowOperation(icon =
-        "fa fa-cloud-upload", title = "更新", mode = RowOperation.Mode.SINGLE, ifExpr = "item.lastVersion !== item.version", ifExprBehavior =
-        RowOperation.IfExprBehavior.HIDE, operationParam = "update", operationHandler = EruptPf4jPlugin.class)})
+                @RowOperation(icon = "fa fa-remove", title = "卸载", ifExpr = "item.hasPlugin", ifExprBehavior = RowOperation.IfExprBehavior.HIDE, mode =
+                        RowOperation.Mode.SINGLE, tip = "删除数据并删除插件及版本", operationParam = "uninstall", operationHandler = EruptPf4jPlugin.class),
+                @RowOperation(icon =
+                        "fa fa-cloud-upload", title = "更新", mode = RowOperation.Mode.SINGLE, ifExpr = "item.lastVersion !== item.version", ifExprBehavior =
+                        RowOperation.IfExprBehavior.HIDE, operationParam = "update", operationHandler = EruptPf4jPlugin.class)
+        }
+)
 @Entity
 @Table(name = "e_pf4j_plugin", uniqueConstraints = @UniqueConstraint(columnNames = "pluginId"))
 @Component
@@ -53,7 +66,11 @@ import java.util.Map;
 @Slf4j
 public class EruptPf4jPlugin extends MetaModel implements DataProxy<EruptPf4jPlugin>, OperationHandler<EruptPf4jPlugin, Void> {
 
-    @EruptField(views = @View(title = "插件ID", width = "150px"), edit = @Edit(title = "插件ID", notNull = true, search = @Search(vague = true)))
+    @EruptField(
+            views = @View(title = "插件ID", width = "150px"),
+            edit = @Edit(title = "插件ID", desc = "插件唯一ID，保存后不可更改", readonly = @Readonly(add = false), notNull = true,
+            search = @Search(vague = true))
+    )
     private String pluginId;
 
     @EruptField(views = @View(title = "插件名称"), edit = @Edit(title = "插件名称", notNull = true, search = @Search(vague = true)))
@@ -88,11 +105,6 @@ public class EruptPf4jPlugin extends MetaModel implements DataProxy<EruptPf4jPlu
         if (Long.parseLong(queryMap.get("_count").toString()) > 0) {
             throw new EruptWebApiRuntimeException("插件[" + plugin.getPluginId() + "]已存在");
         }
-    }
-
-    @Override
-    public void beforeUpdate(EruptPf4jPlugin plugin) {
-        beforeAdd(plugin);
     }
 
     @Override
