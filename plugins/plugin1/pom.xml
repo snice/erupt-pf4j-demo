@@ -47,6 +47,10 @@
             <groupId>xyz.erupt</groupId>
             <artifactId>erupt-jpa</artifactId>
         </dependency>
+        <dependency>
+            <groupId>xyz.erupt</groupId>
+            <artifactId>erupt-tpl</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

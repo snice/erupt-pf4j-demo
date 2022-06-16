@@ -23,6 +23,7 @@
         <plugin.version/>
         <plugin.provider/>
         <plugin.dependencies/>
+        <erupt.version>1.10.8</erupt.version>
     </properties>
 
     <repositories>
@@ -50,7 +51,12 @@
             <dependency>
                 <groupId>xyz.erupt</groupId>
                 <artifactId>erupt-jpa</artifactId>
-                <version>1.10.8</version>
+                <version>${erupt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>xyz.erupt</groupId>
+                <artifactId>erupt-tpl</artifactId>
+                <version>${erupt.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

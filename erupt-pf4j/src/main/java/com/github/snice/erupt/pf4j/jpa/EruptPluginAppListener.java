@@ -1,6 +1,6 @@
-package com.github.snice.erupt.pf4j.listener;
+package com.github.snice.erupt.pf4j.jpa;
 
-import com.github.snice.erupt.pf4j.aop.EruptTransactionInterceptor;
+import com.github.snice.erupt.pf4j.jpa.aop.EruptTransactionInterceptor;
 import com.github.snice.spring.pf4j.listener.PluginAppListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;

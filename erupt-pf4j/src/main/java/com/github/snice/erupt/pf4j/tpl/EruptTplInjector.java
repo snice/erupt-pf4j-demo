@@ -1,4 +1,4 @@
-package com.github.snice.erupt.pf4j.inject;
+package com.github.snice.erupt.pf4j.tpl;
 
 import com.github.snice.spring.pf4j.SpringPluginManager;
 import com.github.snice.spring.pf4j.inject.ISpringInjector;
@@ -7,31 +7,35 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.stereotype.Component;
-import xyz.erupt.annotation.Erupt;
-import xyz.erupt.core.service.EruptCoreService;
+import xyz.erupt.tpl.annotation.EruptTpl;
+import xyz.erupt.tpl.service.EruptTplService;
+
+import javax.annotation.Resource;
 
 @Lazy
 @Component
 @Slf4j
-public class EruptInjector extends ISpringInjector {
-    public EruptInjector(ApplicationContext applicationContext, SpringPluginManager springPluginManager) {
+public class EruptTplInjector extends ISpringInjector {
+    @Lazy
+    @Resource
+    EruptTplService tplService;
+
+    public EruptTplInjector(ApplicationContext applicationContext, SpringPluginManager springPluginManager) {
         super(applicationContext, springPluginManager);
     }
 
     @Override
     public boolean isSupport(Class c) {
-        return AnnotatedElementUtils.hasAnnotation(c, Erupt.class);
+        return AnnotatedElementUtils.hasAnnotation(c, EruptTpl.class);
     }
 
     @Override
     public void register(Class c) throws Exception {
-        EruptCoreService.registerErupt(c);
-        log.info("register @Erupt " + c);
+        tplService.registerTpl(c);
     }
 
     @Override
     public void unregister(Class c) throws Exception {
-        EruptCoreService.unregisterErupt(c);
-        log.info("unregister @Erupt " + c);
+        tplService.unregisterTpl(c);
     }
 }

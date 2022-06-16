@@ -1,5 +1,6 @@
-package com.github.snice.erupt.pf4j.aop;
+package com.github.snice.erupt.pf4j.jpa.aop;
 
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 @Component
 @Aspect
 @Order(1)
+@Slf4j
 public class EruptTransactionInterceptor {
 
     private List<TransactionManager> transactionManagers = new ArrayList<>();
@@ -39,6 +41,7 @@ public class EruptTransactionInterceptor {
 
     @Around("pointcut()")
     public Object tsBefore(ProceedingJoinPoint joinPoint) throws Throwable {
+        log.info("Erupt-pf4j JPA 事物拦截器");
         TransactionInterceptor transactionInterceptor = EruptSpringUtil.getApplicationContext().getBean(TransactionInterceptor.class);
         transactionInterceptor.setTransactionManager(null);
         if (joinPoint instanceof MethodInvocationProceedingJoinPoint) {
