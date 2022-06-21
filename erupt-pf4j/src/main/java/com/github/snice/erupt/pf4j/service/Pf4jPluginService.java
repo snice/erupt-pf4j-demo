@@ -134,10 +134,9 @@ public class Pf4jPluginService {
     }
 
     private EruptPf4jPlugin getPlugin(String pluginId) {
-        EruptPf4jPlugin plugin = eruptDao.queryEntity(EruptPf4jPlugin.class, " pluginId = :pId", new HashMap<>() {{
+        return eruptDao.queryEntity(EruptPf4jPlugin.class, " pluginId = :pId", new HashMap<>() {{
             put("pId", pluginId);
         }});
-        return plugin;
     }
 
     private Long countPlugin(Long id) {

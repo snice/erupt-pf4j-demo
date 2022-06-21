@@ -8,6 +8,8 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import xyz.erupt.core.annotation.EruptScan;
 
 import java.awt.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URI;
 
 @SpringBootApplication
@@ -15,8 +17,31 @@ import java.net.URI;
 @EruptScan
 public class ExampleApplication extends SpringBootServletInitializer {
 
+    /**
+     * 忽略非法反射警告  适用于jdk11
+     */
+    @SuppressWarnings("unchecked")
+    public static void disableAccessWarnings() {
+        try {
+            Class unsafeClass = Class.forName("sun.misc.Unsafe");
+            Field field = unsafeClass.getDeclaredField("theUnsafe");
+            field.setAccessible(true);
+            Object unsafe = field.get(null);
+
+            Method putObjectVolatile = unsafeClass.getDeclaredMethod("putObjectVolatile", Object.class, long.class, Object.class);
+            Method staticFieldOffset = unsafeClass.getDeclaredMethod("staticFieldOffset", Field.class);
+
+            Class loggerClass = Class.forName("jdk.internal.module.IllegalAccessLogger");
+            Field loggerField = loggerClass.getDeclaredField("logger");
+            Long offset = (Long) staticFieldOffset.invoke(unsafe, loggerField);
+            putObjectVolatile.invoke(unsafe, loggerClass, offset, null);
+        } catch (Exception ignored) {
+        }
+    }
+
     //详细使用方法详见项目内 README.md 文件说明
     public static void main(String[] args) {
+        disableAccessWarnings();
         SpringApplication.run(ExampleApplication.class, args);
         try {
             System.setProperty("java.awt.headless", "false");

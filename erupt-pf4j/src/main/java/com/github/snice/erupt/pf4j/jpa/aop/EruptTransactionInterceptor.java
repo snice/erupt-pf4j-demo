@@ -17,7 +17,6 @@ import xyz.erupt.core.view.EruptModel;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @Aspect
@@ -43,7 +42,6 @@ public class EruptTransactionInterceptor {
     public Object tsBefore(ProceedingJoinPoint joinPoint) throws Throwable {
         log.info("Erupt-pf4j JPA 事物拦截器");
         TransactionInterceptor transactionInterceptor = EruptSpringUtil.getApplicationContext().getBean(TransactionInterceptor.class);
-        transactionInterceptor.setTransactionManager(null);
         if (joinPoint instanceof MethodInvocationProceedingJoinPoint) {
             MethodInvocationProceedingJoinPoint invocationProceedingJoinPoint = ((MethodInvocationProceedingJoinPoint) joinPoint);
             Object[] args = invocationProceedingJoinPoint.getArgs();
@@ -51,21 +49,23 @@ public class EruptTransactionInterceptor {
                 EruptModel eruptModel = EruptCoreService.getErupt(args[0].toString());
                 if (eruptModel != null) {
                     if (!transactionManagers.isEmpty()) {
-                        List<TransactionManager> tms = transactionManagers.stream().filter(tm -> {
+                        TransactionManager tm = transactionManagers.stream().filter(it -> {
                             try {
-                                return ((JpaTransactionManager) tm).getEntityManagerFactory().getMetamodel().entity(eruptModel.getClazz()) != null;
+                                return ((JpaTransactionManager) it).getEntityManagerFactory().getMetamodel().entity(eruptModel.getClazz()) != null;
                             } catch (Exception e) {
                                 return false;
                             }
-                        }).collect(Collectors.toList());
-                        if (tms != null && !tms.isEmpty()) {
-                            transactionInterceptor.setTransactionManager(tms.get(0));
+                        }).findFirst().orElse(null);
+                        if (tm != null) {
+                            transactionInterceptor.setTransactionManager(tm);
                         }
                     }
                 }
             }
         }
-        return joinPoint.proceed();
+        Object obj = joinPoint.proceed();
+        if (transactionInterceptor.getTransactionManager() != null) transactionInterceptor.setTransactionManager(null);
+        return obj;
     }
 
 
