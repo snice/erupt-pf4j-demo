@@ -19,6 +19,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 import xyz.erupt.annotation.sub_erupt.Tpl;
+import xyz.erupt.core.service.EruptCoreService;
+import xyz.erupt.core.view.EruptModel;
 import xyz.erupt.tpl.annotation.EruptTpl;
 import xyz.erupt.tpl.annotation.TplAction;
 import xyz.erupt.tpl.engine.EngineTemplate;
@@ -51,14 +53,16 @@ public class PluginTplActionAspect {
     @Resource
     private SpringPluginManager pluginManager;
 
-    Map<Tpl.Engine, EngineTemplate<Object>> eruptTplEngines;
+    private Field fieldTplEngines;
+
+    private Map<Tpl.Engine, EngineTemplate<Object>> eruptTplEngines;
 
     private static final Map<Tpl.Engine, EngineTemplate<Object>> pluginTplEngines = new HashMap<>();
 
-    private static final Class<?>[] engineTemplates = {NativeEngine.class, PluginFreemarkerEngine.class};
+    private static final Class<?>[] pluginEngineTemplates = {NativeEngine.class, PluginFreemarkerEngine.class};
 
     static {
-        for (Class<?> tpl : engineTemplates) {
+        for (Class<?> tpl : pluginEngineTemplates) {
             try {
                 EngineTemplate<Object> engineTemplate = (EngineTemplate) tpl.newInstance();
                 engineTemplate.setEngine(engineTemplate.init());
@@ -78,12 +82,23 @@ public class PluginTplActionAspect {
     @Around("pointcut()")
     public Object tplBefore(ProceedingJoinPoint joinPoint) throws Throwable {
         log.info("Erupt-pf4j TPL 拦截器");
+        if (fieldTplEngines == null) {
+            fieldTplEngines = ReflectionUtils.findField(EruptTplService.class, "tplEngines");
+            if (fieldTplEngines != null) {
+                fieldTplEngines.setAccessible(true);
+                if (Modifier.isFinal(fieldTplEngines.getModifiers())) {
+                    Field modifiersField = Field.class.getDeclaredField("modifiers");
+                    modifiersField.setAccessible(true);
+                    modifiersField.setInt(fieldTplEngines, fieldTplEngines.getModifiers() & ~Modifier.FINAL);
+                }
+            }
+        }
         if (joinPoint instanceof MethodInvocationProceedingJoinPoint) {
             MethodInvocationProceedingJoinPoint invocationProceedingJoinPoint = ((MethodInvocationProceedingJoinPoint) joinPoint);
             Signature signature = invocationProceedingJoinPoint.getSignature();
+            Object[] args = invocationProceedingJoinPoint.getArgs();
+            String fileName = (String) args[0];
             if ("eruptTplPage".equals(signature.getName())) {
-                Object[] args = invocationProceedingJoinPoint.getArgs();
-                String fileName = (String) args[0];
                 HttpServletResponse response = (HttpServletResponse) args[1];
                 response.setCharacterEncoding(StandardCharsets.UTF_8.name());
                 Method method = this.eruptTplService.getAction(fileName);
@@ -92,37 +107,39 @@ public class PluginTplActionAspect {
                     PluginWrapper pluginWrapper =
                             pluginManager.getPlugins(PluginState.STARTED).stream().filter(it -> it.getPluginClassLoader() == tplClass.getClassLoader()).findFirst().orElse(null);
                     if (pluginWrapper != null) {
-                        PluginUtils.pluginWrapper = pluginWrapper;
                         Object tplObj = null;
                         Collection collection = ((SpringPlugin) pluginWrapper.getPlugin()).getApplicationContext().getBeansOfType(tplClass).values();
                         if (collection != null) {
                             tplObj = collection.stream().findFirst().orElse(null);
                         }
                         if (tplObj != null) {
+                            PluginUtils.pluginWrapper = pluginWrapper;
                             renderPluginTpl(fileName, method, tplObj, response);
+                            PluginUtils.pluginWrapper = null;
                             return null;
                         }
                     }
                 }
+            } else if ("getEruptFieldHtml".equals(signature.getName()) || "getOperationTpl".equals(signature.getName())) {
+                EruptModel eruptModel = EruptCoreService.getErupt(fileName);
+                PluginWrapper pluginWrapper =
+                        pluginManager.getPlugins(PluginState.STARTED).stream().filter(it -> it.getPluginClassLoader() == eruptModel.getClazz().getClassLoader()).findFirst().orElse(null);
+                if (pluginWrapper != null) {
+                    PluginUtils.pluginWrapper = pluginWrapper;
+                    ReflectionUtils.setField(fieldTplEngines, eruptTplService, pluginTplEngines);
+                }
             }
         }
         Object obj = joinPoint.proceed();
+        ReflectionUtils.setField(fieldTplEngines, eruptTplService, eruptTplEngines);
+        PluginUtils.pluginWrapper = null;
         return obj;
     }
 
     private void renderPluginTpl(String fileName, Method method, Object obj, HttpServletResponse response) throws IOException, IllegalAccessException,
-            InvocationTargetException, NoSuchFieldException {
-        Field field = ReflectionUtils.findField(EruptTplService.class, "tplEngines");
-        if (field != null) {
-            field.setAccessible(true);
-            if (Modifier.isFinal(field.getModifiers())) {
-                Field modifiersField = Field.class.getDeclaredField("modifiers");
-                modifiersField.setAccessible(true);
-                modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-            }
-        }
+            InvocationTargetException {
         if (eruptTplEngines == null) {
-            eruptTplEngines = (Map<Tpl.Engine, EngineTemplate<Object>>) ReflectionUtils.getField(field, eruptTplService);
+            eruptTplEngines = (Map<Tpl.Engine, EngineTemplate<Object>>) ReflectionUtils.getField(fieldTplEngines, eruptTplService);
         }
 
         EruptTpl eruptTpl = obj.getClass().getAnnotation(EruptTpl.class);
@@ -131,10 +148,9 @@ public class PluginTplActionAspect {
         if (StringUtils.isNotBlank(tplAction.path())) {
             path = tplAction.path();
         }
-        ReflectionUtils.setField(field, eruptTplService, pluginTplEngines);
+        ReflectionUtils.setField(fieldTplEngines, eruptTplService, pluginTplEngines);
         this.eruptTplService.tplRender(eruptTpl.engine(), path, (Map) method.invoke(obj), response.getWriter());
-        ReflectionUtils.setField(field, eruptTplService, eruptTplEngines);
-        PluginUtils.pluginWrapper = null;
+        ReflectionUtils.setField(fieldTplEngines, eruptTplService, eruptTplEngines);
     }
 
 }
