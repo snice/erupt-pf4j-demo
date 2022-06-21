@@ -1,7 +1,7 @@
 package com.github.snice.erupt.pf4j.tpl.aop;
 
 import com.github.snice.erupt.pf4j.tpl.PluginUtils;
-import com.github.snice.erupt.pf4j.tpl.engine.PluginFreemarkerEngine;
+import com.github.snice.erupt.pf4j.tpl.engine.*;
 import com.github.snice.spring.pf4j.SpringPlugin;
 import com.github.snice.spring.pf4j.SpringPluginManager;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,6 @@ import xyz.erupt.core.view.EruptModel;
 import xyz.erupt.tpl.annotation.EruptTpl;
 import xyz.erupt.tpl.annotation.TplAction;
 import xyz.erupt.tpl.engine.EngineTemplate;
-import xyz.erupt.tpl.engine.NativeEngine;
 import xyz.erupt.tpl.service.EruptTplService;
 
 import javax.annotation.Resource;
@@ -59,7 +58,8 @@ public class PluginTplActionAspect {
 
     private static final Map<Tpl.Engine, EngineTemplate<Object>> pluginTplEngines = new HashMap<>();
 
-    private static final Class<?>[] pluginEngineTemplates = {NativeEngine.class, PluginFreemarkerEngine.class};
+    private static final Class<?>[] pluginEngineTemplates = {PluginNativeEngine.class, PluginFreemarkerEngine.class, PluginThymeleafEngine.class,
+            PluginEnjoyEngine.class, PluginBeetlEngine.class, PluginVelocityEngine.class};
 
     static {
         for (Class<?> tpl : pluginEngineTemplates) {
@@ -81,7 +81,7 @@ public class PluginTplActionAspect {
 
     @Around("pointcut()")
     public Object tplBefore(ProceedingJoinPoint joinPoint) throws Throwable {
-        log.info("Erupt-pf4j TPL 拦截器");
+        PluginUtils.pluginWrapper = null;
         if (fieldTplEngines == null) {
             fieldTplEngines = ReflectionUtils.findField(EruptTplService.class, "tplEngines");
             if (fieldTplEngines != null) {
@@ -92,6 +92,11 @@ public class PluginTplActionAspect {
                     modifiersField.setInt(fieldTplEngines, fieldTplEngines.getModifiers() & ~Modifier.FINAL);
                 }
             }
+        }
+        if (eruptTplEngines == null) {
+            eruptTplEngines = (Map<Tpl.Engine, EngineTemplate<Object>>) ReflectionUtils.getField(fieldTplEngines, eruptTplService);
+        } else {
+            restoreEruptTplEngines();
         }
         if (joinPoint instanceof MethodInvocationProceedingJoinPoint) {
             MethodInvocationProceedingJoinPoint invocationProceedingJoinPoint = ((MethodInvocationProceedingJoinPoint) joinPoint);
@@ -113,9 +118,11 @@ public class PluginTplActionAspect {
                             tplObj = collection.stream().findFirst().orElse(null);
                         }
                         if (tplObj != null) {
+                            log.info("Erupt-pf4j @TplAction 拦截处理");
                             PluginUtils.pluginWrapper = pluginWrapper;
                             renderPluginTpl(fileName, method, tplObj, response);
                             PluginUtils.pluginWrapper = null;
+                            restoreEruptTplEngines();
                             return null;
                         }
                     }
@@ -125,23 +132,24 @@ public class PluginTplActionAspect {
                 PluginWrapper pluginWrapper =
                         pluginManager.getPlugins(PluginState.STARTED).stream().filter(it -> it.getPluginClassLoader() == eruptModel.getClazz().getClassLoader()).findFirst().orElse(null);
                 if (pluginWrapper != null) {
+                    log.info("Erupt-pf4j @Tpl 拦截处理");
                     PluginUtils.pluginWrapper = pluginWrapper;
-                    ReflectionUtils.setField(fieldTplEngines, eruptTplService, pluginTplEngines);
                 }
             }
         }
         Object obj = joinPoint.proceed();
-        ReflectionUtils.setField(fieldTplEngines, eruptTplService, eruptTplEngines);
         PluginUtils.pluginWrapper = null;
+        restoreEruptTplEngines();
         return obj;
+    }
+
+    private void restoreEruptTplEngines() {
+        if (ReflectionUtils.getField(fieldTplEngines, eruptTplService) != eruptTplEngines)
+            ReflectionUtils.setField(fieldTplEngines, eruptTplService, eruptTplEngines);
     }
 
     private void renderPluginTpl(String fileName, Method method, Object obj, HttpServletResponse response) throws IOException, IllegalAccessException,
             InvocationTargetException {
-        if (eruptTplEngines == null) {
-            eruptTplEngines = (Map<Tpl.Engine, EngineTemplate<Object>>) ReflectionUtils.getField(fieldTplEngines, eruptTplService);
-        }
-
         EruptTpl eruptTpl = obj.getClass().getAnnotation(EruptTpl.class);
         TplAction tplAction = method.getAnnotation(TplAction.class);
         String path = "/tpl/" + fileName;
@@ -150,7 +158,6 @@ public class PluginTplActionAspect {
         }
         ReflectionUtils.setField(fieldTplEngines, eruptTplService, pluginTplEngines);
         this.eruptTplService.tplRender(eruptTpl.engine(), path, (Map) method.invoke(obj), response.getWriter());
-        ReflectionUtils.setField(fieldTplEngines, eruptTplService, eruptTplEngines);
     }
 
 }

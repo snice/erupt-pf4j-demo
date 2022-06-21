@@ -10,7 +10,7 @@ import java.util.Map;
 
 @EruptTpl
 @Service
-public class TestAction {
+public class TestFreemakerAction {
     @TplAction(value = "test.ftl")
     public Map<String, Object> dashboard() {
         Map<String, Object> map = new HashMap<>();
