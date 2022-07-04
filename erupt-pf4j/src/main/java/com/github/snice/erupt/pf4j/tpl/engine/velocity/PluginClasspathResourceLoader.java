@@ -4,14 +4,22 @@ import com.github.snice.erupt.pf4j.tpl.PluginUtils;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 
-import java.io.InputStream;
+import java.io.IOException;
+import java.io.Reader;
 
 public class PluginClasspathResourceLoader extends ClasspathResourceLoader {
 
-    @Override
-    public InputStream getResourceStream(String name) throws ResourceNotFoundException {
-        if(PluginUtils.pluginWrapper == null) return null;
-        return PluginUtils.pluginWrapper.getPluginClassLoader().getResourceAsStream(name);
+    public Reader getResourceReader(String name, String encoding) throws ResourceNotFoundException {
+        if (PluginUtils.pluginWrapper == null) return null;
+        String s = name.replaceFirst("\\/", "");
+        while (s.startsWith("/")) {
+            s = name.replaceFirst("\\/", "");
+        }
+        try {
+            return this.buildReader(PluginUtils.pluginWrapper.getPluginClassLoader().getResourceAsStream(s), encoding);
+        } catch (IOException e) {
+            return null;
+        }
     }
 
 }

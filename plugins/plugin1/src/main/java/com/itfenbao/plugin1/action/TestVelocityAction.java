@@ -1,5 +1,6 @@
 package com.itfenbao.plugin1.action;
 
+import org.springframework.stereotype.Service;
 import xyz.erupt.annotation.sub_erupt.Tpl;
 import xyz.erupt.tpl.annotation.EruptTpl;
 import xyz.erupt.tpl.annotation.TplAction;
@@ -12,6 +13,7 @@ import java.util.Map;
  * date 2021/3/30 19:38
  */
 @EruptTpl(engine = Tpl.Engine.Velocity)
+@Service
 public class TestVelocityAction {
 
     @TplAction(value = "test.vm", path = "/tpl/velocity/velocity.vm")
