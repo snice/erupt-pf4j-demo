@@ -23,7 +23,7 @@
         <plugin.version/>
         <plugin.provider/>
         <plugin.dependencies/>
-        <erupt.version>1.10.8</erupt.version>
+        <erupt.version>1.10.9</erupt.version>
     </properties>
 
     <repositories>
