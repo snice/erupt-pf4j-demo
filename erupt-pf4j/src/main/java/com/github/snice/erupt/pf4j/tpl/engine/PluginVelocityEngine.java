@@ -21,7 +21,9 @@ public class PluginVelocityEngine extends EngineTemplate<VelocityEngine> {
     public VelocityEngine init() {
         VelocityEngine ve = new VelocityEngine();
         ve.setProperty(Velocity.INPUT_ENCODING, StandardCharsets.UTF_8);
-        ve.setProperty("file.resource.loader.class", "com.github.snice.erupt.pf4j.tpl.engine.velocity.PluginClasspathResourceLoader");
+        // 2.0之后不推荐
+//        ve.setProperty("file.resource.loader.class", "com.github.snice.erupt.pf4j.tpl.engine.velocity.PluginClasspathResourceLoader");
+        ve.setProperty("resource.loader.file.class", "com.github.snice.erupt.pf4j.tpl.engine.velocity.PluginClasspathResourceLoader");
         ve.init();
         return ve;
     }

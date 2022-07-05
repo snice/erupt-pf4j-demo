@@ -14,8 +14,10 @@ import javax.sql.DataSource;
 
 @Configuration
 @ComponentScan
-@EnableJpaRepositories(basePackages = "com.itfenbao.plugin1.repository", entityManagerFactoryRef = "plugin1EntityFactoryBean")
+@EnableJpaRepositories(basePackages = "com.itfenbao.plugin1.repository")
 public class PluginConfiguration {
+
+    private static final String persistenceUnit = "plugin1Persistence";
 
     @Resource
     private EntityManagerFactoryBuilder entityManagerFactoryBuilder;
@@ -24,14 +26,14 @@ public class PluginConfiguration {
     private DataSource dataSource;
 
     @Bean
-    public LocalContainerEntityManagerFactoryBean plugin1EntityFactoryBean() {
-        return entityManagerFactoryBuilder.dataSource(dataSource).persistenceUnit("plugin1Persistence").packages("com.itfenbao.plugin1.entity").build();
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+        return entityManagerFactoryBuilder.dataSource(dataSource).persistenceUnit(persistenceUnit).packages("com.itfenbao.plugin1.entity").build();
     }
 
     @Bean
     public PlatformTransactionManager transactionManager() {
         JpaTransactionManager transactionManager = new JpaTransactionManager();
-        transactionManager.setPersistenceUnitName("plugin1Persistence");
+        transactionManager.setPersistenceUnitName(persistenceUnit);
         return transactionManager;
     }
 
